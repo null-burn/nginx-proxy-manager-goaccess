@@ -1,0 +1,37 @@
+version: "3"
+
+networks:
+  nginx_proxy_manager:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+services:
+  app:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nginx_proxy
+    restart: always
+    ports:
+      - '80:80'
+      - '443:443'
+      # Admin Web Port:
+      - '81:81'
+    environment:
+      DB_SQLITE_FILE: "/data/database.sqlite"
+      # Uncomment this if IPv6 is not enabled on your host
+      DISABLE_IPV6: 'true'
+    volumes:
+      - ./nginx_proxy/data:/data
+      - ./nginx_proxy/letsencrypt:/etc/letsencrypt
+    networks:
+      nginx_proxy_manager:
+        ipv4_address: 172.20.0.2
+  goaccess:
+    image: gregyankovoy/goaccess        
+    container_name: goaccess
+    restart: always
+    ports:
+        - '7889:7889'
+    volumes:
+        - ./nginx_proxy/data/logs:/opt/log
+        - ./goaccess/storage:/config
